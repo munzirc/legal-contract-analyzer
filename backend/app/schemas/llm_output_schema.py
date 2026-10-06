@@ -2,7 +2,7 @@ from pydantic import BaseModel
 
 class DocumentRegion(BaseModel):
     region_type: str
-    number: str | None
+    identifier: str | None
     title: str | None
     start_line: int
 

@@ -1,0 +1,394 @@
+================================================================================
+STRUCTURE VALIDATION
+================================================================================
+
+REGION: PREAMBLE
+Identifier: [none]
+Title: AGREEMENT FOR HALL OF RESIDENCE NO. – __
+Lines: L6 -> L44
+
+CLAUSES
+--------------------------------------------------------------------------------
+
+GAPS
+--------------------------------------------------------------------------------
+L6 -> L44
+AGREEMENT FOR HALL OF RESIDENCE NO. – __ 
+ 
+ 
+THIS AGREEMENT  has been made on this __th day of October, 2012 at IIT Kanpur 
+BETWEEN Indian Institute of Technology Kanpur (hereinafter referred to as the Institute) 
+incorporated as a body of corporate under the Institute of Technology A ct, 1961, through 
+its Director (represented by Dean of Students’ Affairs, Chairman, Council of Wardens & 
+Warden-in-Charge/Warden of Hall of Residence No.-__.) 
+ 
+AND M/s __________ registered under ________________________ and having it’s office 
+at __________________________________________________ (hereinafter referred to as 
+The Service Provider which expression shall  include his/their respective heir s, executors, 
+administrators and assignees), represented by _____________________________ on the 
+other part. 
+ 
+AND whereas the Institute has empanelled some agencies for providing operational 
+services to its mess of Halls of Residence as per the terms and conditions, specifications and 
+general conditions of the contract, as attached along with this agreement. 
+AND whereas the said terms and conditions, specifications as well as the scope of work to 
+be done, as set out in the General Conditions of the contract, have been accepted and 
+signed by the Service Provider. 
+ 2 
+AND whereas the Service Provider  has agreed to execute, upon and subject to the 
+condition set forth herein, (hereinafter referred to as the said conditions) the work  shown in 
+the General Conditions of the Contract. 
+AND whereas the Service Provider has deposited a sum of Rs. __________ (___ lakhs only) 
+as earnest money in the form of a Demand Draft No. ________ dated _______ issued by  
+___________________ in favour of Hall Management, IIT Kanpur payable at UBI, I.I.T. 
+Branch Kanpur as performance guarantee for the said work and has agreed that this be 
+retained by the Institute as part of Security Deposit of Rs. 5,00,000/- (Five Lakhs only) 
+ 
+AND whereas the Service Provi der has promised to deposit Rs. __________ (_____ lakhs 
+only) as remaining part of the security deposit in the form of a Bank Draft latest by 
+__________  
+ 
+AND whereas in pursuance thereof the Service Provider  has commenced the work with 
+effect from October 01, 2012. 
+ 
+NOW therefore it is hereby agreed as follows: 
+
+
+OVERLAPS
+--------------------------------------------------------------------------------
+None
+
+================================================================================
+
+REGION: AGREEMENT_TERMS
+Identifier: [none]
+Title: NOW therefore it is hereby agreed as follows:
+Lines: L44 -> L70
+
+CLAUSES
+--------------------------------------------------------------------------------
+1        L45    -> L47    
+2        L48    -> L49    
+3        L50    -> L53    
+4        L54    -> L60    
+5        L61    -> L64    
+6        L65    -> L67    
+7        L68    -> L70    
+
+GAPS
+--------------------------------------------------------------------------------
+L44 -> L44
+NOW therefore it is hereby agreed as follows: 
+
+
+OVERLAPS
+--------------------------------------------------------------------------------
+None
+
+================================================================================
+
+REGION: ARTICLE
+Identifier: 1
+Title: Definition of terms
+Lines: L96 -> L142
+
+CLAUSES
+--------------------------------------------------------------------------------
+1.0      L97    -> L101   Definition of terms
+1.1      L103   -> L107   The "Contract"
+1.2      L109   -> L112   The "Service provider"
+1.3      L114   -> L117   The “Empanelment”
+1.4      L119   -> L126   The "Hostel"
+1.5      L128   -> L130   The "Institute"
+1.6      L132   -> L133   The "Letter of Empanelment”
+1.7      L135   -> L138   The "Hostel Executive Committee (HEC)"
+1.8      L140   -> L142   The "Work"
+
+GAPS
+--------------------------------------------------------------------------------
+L96 -> L96
+ARTICLE—1 
+
+
+OVERLAPS
+--------------------------------------------------------------------------------
+None
+
+================================================================================
+
+REGION: ARTICLE
+Identifier: 2
+Title: Description of the Hall of Residence No.-__
+Lines: L147 -> L181
+
+CLAUSES
+--------------------------------------------------------------------------------
+2.0      L150   -> L150   Description of the Hall of Residence No.-__
+2.1      L152   -> L157   
+2.2      L159   -> L160   
+2.3      L162   -> L164   
+2.4      L166   -> L168   
+2.5      L170   -> L172   
+2.6      L174   -> L177   
+2.7      L179   -> L181   
+
+GAPS
+--------------------------------------------------------------------------------
+L147 -> L149
+ARTICLE—2 
+ 
+ 
+
+
+OVERLAPS
+--------------------------------------------------------------------------------
+None
+
+================================================================================
+
+REGION: ARTICLE
+Identifier: 3
+Title: Scope of Work
+Lines: L195 -> L415
+
+CLAUSES
+--------------------------------------------------------------------------------
+3.0      L197   -> L219   Scope of Work
+3.1      L221   -> L228   
+3.2      L230   -> L233   
+3.3      L235   -> L238   
+3.4      L240   -> L245   
+3.5      L247   -> L253   
+3.6      L255   -> L263   
+3.7      L265   -> L267   
+3.8      L269   -> L272   
+3.9      L274   -> L280   
+3.10     L282   -> L284   
+3.11     L286   -> L296   
+3.12     L298   -> L303   
+3.13     L305   -> L313   
+3.14     L315   -> L333   
+3.15     L336   -> L338   
+3.16     L340   -> L345   
+3.17     L347   -> L351   
+3.18     L353   -> L354   
+3.19     L356   -> L359   
+3.20     L361   -> L366   
+3.21     L368   -> L369   
+3.22     L371   -> L373   
+3.23     L375   -> L377   
+3.24     L379   -> L381   
+3.25     L384   -> L385   
+3.26     L387   -> L390   
+3.27     L392   -> L394   
+3.28     L396   -> L401   
+3.29     L403   -> L405   
+3.30     L407   -> L415   
+
+GAPS
+--------------------------------------------------------------------------------
+L195 -> L196
+ARTICLE—3 
+ 
+
+L334 -> L335
+  
+ 10 
+
+L382 -> L383
+ 
+ 11 
+
+
+OVERLAPS
+--------------------------------------------------------------------------------
+None
+
+================================================================================
+
+REGION: ARTICLE
+Identifier: 4
+Title: Employment of workmen by the Service provider
+Lines: L432 -> L552
+
+CLAUSES
+--------------------------------------------------------------------------------
+4.0      L434   -> L434   Employment of workmen by the Service provider
+4.1      L436   -> L440   
+4.2      L442   -> L446   
+4.3      L448   -> L461   
+4.4      L463   -> L472   
+4.5      L474   -> L480   
+4.6      L482   -> L484   
+4.7      L486   -> L494   
+4.8      L496   -> L507   
+4.9      L509   -> L510   
+4.10     L513   -> L518   
+4.11     L520   -> L521   
+4.12     L523   -> L529   
+4.13     L531   -> L535   
+4.14     L537   -> L539   
+4.15     L541   -> L544   
+4.16     L546   -> L548   
+4.17     L550   -> L552   
+
+GAPS
+--------------------------------------------------------------------------------
+L432 -> L433
+ARTICLE—4 
+ 
+
+
+OVERLAPS
+--------------------------------------------------------------------------------
+None
+
+================================================================================
+
+REGION: ARTICLE
+Identifier: 5
+Title: Rates of service charges and terms of payment
+Lines: L574 -> L633
+
+CLAUSES
+--------------------------------------------------------------------------------
+5.0      L576   -> L576   Rates of service charges and terms of payment
+5.1      L578   -> L579   
+5.2      L581   -> L585   
+5.3      L587   -> L593   
+5.4      L595   -> L596   
+5.5      L598   -> L604   
+5.6      L606   -> L612   
+5.7      L614   -> L617   
+5.8      L619   -> L627   
+5.9      L629   -> L633   
+
+GAPS
+--------------------------------------------------------------------------------
+L574 -> L575
+ARTICLE—5 
+ 
+
+
+OVERLAPS
+--------------------------------------------------------------------------------
+None
+
+================================================================================
+
+REGION: ARTICLE
+Identifier: 6
+Title: General Instructions to the Service provider
+Lines: L672 -> L873
+
+CLAUSES
+--------------------------------------------------------------------------------
+6.0      L674   -> L674   General Instructions to the Service provider
+6.1      L676   -> L693   Security Deposit
+6.2      L695   -> L710   Termination
+6.3      L712   -> L760   Regarding compliance of statutory provisions
+6.4      L762   -> L775   Responsibility for Proper Upkeep of Buildings and Services
+6.5      L778   -> L863   Interpretation of Contract Documents
+6.6      L866   -> L873   Forfeiture of Security Deposit
+
+GAPS
+--------------------------------------------------------------------------------
+L672 -> L673
+ARTICLE—6 
+ 
+
+L864 -> L865
+ 21 
+ 
+
+
+OVERLAPS
+--------------------------------------------------------------------------------
+None
+
+================================================================================
+
+REGION: ARTICLE
+Identifier: 7
+Title: Service provider's Subordinate Staff and their Conduct
+Lines: L883 -> L1183
+
+CLAUSES
+--------------------------------------------------------------------------------
+7.0      L885   -> L897   Service provider's Subordinate Staff and their Conduct
+7.0.1    L899   -> L904   
+7.0.2    L906   -> L911   
+7.0.3    L913   -> L927   
+7.0.4    L929   -> L939   
+7.0.5    L941   -> L944   
+7.1      L946   -> L950   Sub-Letting of Works
+7.2      L952   -> L983   Power of Entry
+7.3      L985   -> L1009  Force Majeure
+7.4      L1011  -> L1015  Release of Information
+7.5      L1017  -> L1021  Completion of Contract
+7.6      L1023  -> L1031  Schedule of Rates and Payments
+7.7      L1033  -> L1053  Schedule of Rates to be Inclusive
+7.8      L1055  -> L1063  Receipts for Payment
+7.9      L1065  -> L1075  Completion Certificate/No Dues Certificate
+7.10     L1077  -> L1084  Accident or Injury to Workman
+7.11     L1086  -> L1094  Damage to Property
+7.12     L1096  -> L1120  Labour Laws
+7.13     L1123  -> L1130  Safety Regulations
+7.14     L1132  -> L1166  Arbitration
+7.15     L1168  -> L1175  Jurisdiction
+7.16     L1177  -> L1183  General Rules
+
+GAPS
+--------------------------------------------------------------------------------
+L883 -> L884
+ARTICLE—7 
+ 
+
+L1121 -> L1122
+ 
+ 27 
+
+
+OVERLAPS
+--------------------------------------------------------------------------------
+None
+
+================================================================================
+
+REGION: ANNEXURE
+Identifier: I
+Title: MESS REBATE RULES
+Lines: L1220 -> L1294
+
+CLAUSES
+--------------------------------------------------------------------------------
+1        L1224  -> L1227  
+2        L1229  -> L1230  
+3        L1232  -> L1235  
+4        L1237  -> L1238  
+5        L1240  -> L1241  
+6        L1243  -> L1259  
+7        L1261  -> L1263  
+8        L1265  -> L1270  
+9        L1272  -> L1273  
+10       L1275  -> L1277  
+11       L1279  -> L1280  
+12       L1282  -> L1285  
+13       L1287  -> L1288  
+14       L1290  -> L1291  
+15       L1293  -> L1294  
+
+GAPS
+--------------------------------------------------------------------------------
+L1220 -> L1223
+Annexure—I 
+ 
+MESS REBATE RULES 
+ 
+
+
+OVERLAPS
+--------------------------------------------------------------------------------
+None
+
+================================================================================

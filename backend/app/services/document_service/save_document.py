@@ -1,15 +1,17 @@
-import io
 import uuid
+import io
+import zipfile
 from pathlib import Path
 
-from docx import Document as DocxDocument
+from docx2pdf import convert # type: ignore[import-untyped]
 from fastapi import UploadFile
 from pypdf import PdfReader
 from sqlalchemy.orm import Session
 
+from app.enums.document_file_type import DocumentFileType
 from app.enums.document_status import DocumentStatus
-from app.utils.app_exceptions import AppException
 from app.models.document_model import Document
+from app.utils.app_exceptions import AppException
 
 
 UPLOAD_DIR = Path("uploads")
@@ -21,7 +23,13 @@ MIN_TEXT_LENGTH = 100
 
 def save_document(file: UploadFile, db: Session) -> Document:
 
-    extension = Path(file.filename).suffix.lower()
+    if not file.filename:
+        raise AppException(
+            status_code=400,
+            message="Filename is required."
+        )
+
+    extension: str = Path(file.filename).suffix.lower()
 
     if extension not in ALLOWED_EXTENSIONS:
         raise AppException(
@@ -37,28 +45,21 @@ def save_document(file: UploadFile, db: Session) -> Document:
             "Failed to read uploaded file.",
             400
         )
-
-    try:
-        verify_document(file_content, extension)
-    except AppException:
-        raise
-    except Exception as e:
-        print(f"Error while verifying document: {e}")
-        raise AppException(
-            "The uploaded file is invalid or corrupted.",
-            400
-        )
+        
+    if extension == ".docx":
+        verify_docx_file(file_content)
 
     document_id = uuid.uuid4()
 
     UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
-    storage_filename = f"{document_id}{extension}"
-    storage_path = UPLOAD_DIR / storage_filename
+    original_storage_path = (
+        UPLOAD_DIR / f"{document_id}{extension}"
+    )
 
-    # 5. Save the original file
+
     try:
-        with open(storage_path, "wb") as f:
+        with open(original_storage_path, "wb") as f:
             f.write(file_content)
     except Exception as e:
         print(f"Error while saving file: {e}")
@@ -66,25 +67,83 @@ def save_document(file: UploadFile, db: Session) -> Document:
             "Failed to save file.",
             500
         )
+        
+    
 
-    # 6. Create database record
+
+    if extension == ".pdf":
+        pdf_storage_path = original_storage_path
+
+    else:
+        pdf_storage_path = UPLOAD_DIR / f"{document_id}.pdf"
+
+        try:
+            convert(
+                str(original_storage_path),
+                str(pdf_storage_path)
+            )
+        except Exception as e:
+            original_storage_path.unlink(missing_ok=True)
+            pdf_storage_path.unlink(missing_ok=True)
+
+            print(f"Error while converting DOCX to PDF: {e}")
+
+            raise AppException(
+                "Failed to convert DOCX to PDF.",
+                400
+            )
+
+  
+    try:
+        page_count = verify_pdf(pdf_storage_path)
+    except AppException:
+        original_storage_path.unlink(missing_ok=True)
+
+        if pdf_storage_path != original_storage_path:
+            pdf_storage_path.unlink(missing_ok=True)
+
+        raise
+    except Exception as e:
+        original_storage_path.unlink(missing_ok=True)
+
+        if pdf_storage_path != original_storage_path:
+            pdf_storage_path.unlink(missing_ok=True)
+
+        print(f"Error while verifying PDF: {e}")
+
+        raise AppException(
+            "The document is invalid or corrupted.",
+            400
+        )
+
+    file_type = (
+        DocumentFileType.PDF
+        if extension == ".pdf"
+        else DocumentFileType.DOCX
+    )
+
     document = Document(
         id=document_id,
         filename=file.filename,
-        file_type=extension.lstrip("."),
-        storage_path=str(storage_path),
-        status=DocumentStatus.UPLOADED
+        file_type=file_type,
+        original_storage_path=str(original_storage_path),
+        pdf_storage_path=str(pdf_storage_path),
+        status=DocumentStatus.UPLOADED,
+        page_count=page_count
     )
 
     try:
         db.add(document)
         db.commit()
         db.refresh(document)
+
     except Exception as e:
         db.rollback()
 
-        # File was already saved, so remove it if DB insert fails.
-        storage_path.unlink(missing_ok=True)
+        original_storage_path.unlink(missing_ok=True)
+
+        if pdf_storage_path != original_storage_path:
+            pdf_storage_path.unlink(missing_ok=True)
 
         print(f"Database error while saving document: {e}")
 
@@ -95,18 +154,11 @@ def save_document(file: UploadFile, db: Session) -> Document:
 
     return document
 
-def verify_document(file_content: bytes, extension: str) -> None:
-    if extension == ".pdf":
-        verify_pdf(file_content)
 
-    elif extension == ".docx":
-        verify_docx(file_content)
+def verify_pdf(pdf_path: Path) -> int:
+    reader = PdfReader(pdf_path)
 
-#PDF Verification
-def verify_pdf(file_content: bytes) -> None:
-    reader = PdfReader(io.BytesIO(file_content))
-
-    full_text = []
+    full_text: list[str] = []
 
     for page in reader.pages:
         page_text = page.extract_text() or ""
@@ -114,31 +166,34 @@ def verify_pdf(file_content: bytes) -> None:
 
     text = "\n".join(full_text)
 
-    # Remove whitespace before checking meaningful content
     pdf_content = "".join(text.split())
 
     if len(pdf_content) < MIN_TEXT_LENGTH:
         raise AppException(
-            "The PDF does not contain enough readable text.",
+            "The document does not contain enough readable text.",
             400
         )
 
+    return len(reader.pages)
 
-# docx Verification
-def verify_docx(file_content: bytes) -> None:
-    document = DocxDocument(io.BytesIO(file_content))
+def verify_docx_file(file_content: bytes) -> None:
+    try:
+        with zipfile.ZipFile(io.BytesIO(file_content)) as archive:
+            required_files = {
+                "[Content_Types].xml",
+                "word/document.xml",
+            }
 
-    full_text = []
+            file_names = set(archive.namelist())
 
-    for paragraph in document.paragraphs:
-        full_text.append(paragraph.text)
+            if not required_files.issubset(file_names):
+                raise AppException(
+                    "The uploaded DOCX file is invalid.",
+                    400
+                )
 
-    text = "\n".join(full_text)
-
-    docx_content = "".join(text.split())
-
-    if len(docx_content) < MIN_TEXT_LENGTH:
+    except zipfile.BadZipFile:
         raise AppException(
-            "The DOCX document does not contain enough readable text.",
+            "The uploaded DOCX file is invalid.",
             400
         )

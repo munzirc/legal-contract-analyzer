@@ -1,17 +1,26 @@
-from fastapi import UploadFile
+from fastapi import UploadFile, BackgroundTasks
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
+from app.services.document_service.process_document import process_document
 from app.services.document_service.save_document import save_document
 from app.utils.app_exceptions import AppException
 
 
-def handle_document_upload(file: UploadFile, db: Session):
+def handle_document_upload(
+    file: UploadFile,
+    db: Session,
+    background_tasks: BackgroundTasks
+) -> dict[str, object] | JSONResponse:
 
     try:
         document = save_document(file, db)
+        
+        background_tasks.add_task(
+            process_document,
+            document.id
+        )
       
-        print("Received file:", file.filename)
 
         return {
             "id": document.id,
