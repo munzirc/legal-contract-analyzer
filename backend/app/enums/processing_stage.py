@@ -1,0 +1,9 @@
+from enum import Enum
+
+
+class ProcessingStage(str, Enum):
+    EXTRACTION = "EXTRACTION"
+    STRUCTURE_DETECTION = "STRUCTURE_DETECTION"
+    CHUNKING = "CHUNKING"
+    EMBEDDING_PIECES = "EMBEDDING_PIECES"
+    EMBEDDING = "EMBEDDING"
