@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import type { PDFDocumentProxy } from "pdfjs-dist";
 
-
+import type { CitationTarget } from "../../../stores/useAppStore";
 import { usePdfPage } from "../hooks/usePdfPage";
 import PdfPage from "./PdfPage";
 
 interface PdfDocumentProps {
     document: PDFDocumentProxy;
     zoom: number;
+    citationTarget: CitationTarget | null;
 }
 
 interface PdfPageItemProps {
@@ -15,6 +16,7 @@ interface PdfPageItemProps {
     pageNumber: number;
     scrollContainer: HTMLDivElement | null;
     scale: number;
+    citationTarget: CitationTarget | null;
 }
 
 interface PageDimensions {
@@ -27,10 +29,28 @@ function PdfPageItem({
     pageNumber,
     scrollContainer,
     scale,
+    citationTarget,
 }: PdfPageItemProps) {
     const pageRef = useRef<HTMLDivElement>(null);
     const [shouldLoad, setShouldLoad] = useState(false);
 
+    const pageRegions =
+        citationTarget?.regions.filter(
+            (region) => region.page_number === pageNumber
+        ) ?? [];
+
+    const isCitationPage = pageRegions.length > 0;
+
+    const firstCitationPage =
+        citationTarget && citationTarget.regions.length > 0
+            ? Math.min(
+                ...citationTarget.regions.map(
+                    (region) => region.page_number
+                )
+            )
+            : null;
+
+    // Load pages when they approach the viewport.
     useEffect(() => {
         const element = pageRef.current;
 
@@ -59,6 +79,41 @@ function PdfPageItem({
         pageNumber
     );
 
+    useEffect(() => {
+        setShouldLoad(false);
+    }, [document]);
+
+    useEffect(() => {
+        if (!isCitationPage) return;
+
+        setShouldLoad(true);
+    }, [citationTarget?.evidenceId, isCitationPage]);
+
+
+    useEffect(() => {
+        if (!isCitationPage || !page || loading) return;
+
+        if (pageNumber !== firstCitationPage) return;
+
+        const animationFrame = requestAnimationFrame(() => {
+            pageRef.current?.scrollIntoView({
+                behavior: "smooth",
+                block: "center",
+            });
+        });
+
+        return () => cancelAnimationFrame(animationFrame);
+    }, [
+        citationTarget?.evidenceId,
+        isCitationPage,
+        page,
+        loading,
+        pageNumber,
+        firstCitationPage,
+    ]);
+
+
+
     return (
         <div
             ref={pageRef}
@@ -69,7 +124,13 @@ function PdfPageItem({
             </div>
 
             <div className="flex min-h-40 justify-center">
-                {page && <PdfPage page={page} scale={scale} />}
+                {page && (
+                    <PdfPage
+                        page={page}
+                        scale={scale}
+                        regions={pageRegions}
+                    />
+                )}
 
                 {loading && (
                     <div className="flex min-h-40 items-center justify-center text-sm text-slate-400">
@@ -95,7 +156,8 @@ function PdfPageItem({
 
 export default function PdfDocument({
     document,
-    zoom
+    zoom,
+    citationTarget,
 }: PdfDocumentProps) {
     const [scrollContainer, setScrollContainer] =
         useState<HTMLDivElement | null>(null);
@@ -108,27 +170,32 @@ export default function PdfDocument({
     const [pageDimensions, setPageDimensions] =
         useState<PageDimensions | null>(null);
 
-
     // Get the dimensions of the first PDF page.
     useEffect(() => {
         let cancelled = false;
 
         setPageDimensions(null);
-        
-        document.getPage(1).then((page) => {
-            if (cancelled) return;
 
-            const viewport = page.getViewport({ scale: 1 });
+        document
+            .getPage(1)
+            .then((page) => {
+                if (cancelled) return;
 
-            setPageDimensions({
-                width: viewport.width,
-                height: viewport.height,
+                const viewport = page.getViewport({ scale: 1 });
+
+                setPageDimensions({
+                    width: viewport.width,
+                    height: viewport.height,
+                });
+            })
+            .catch((error: unknown) => {
+                if (!cancelled) {
+                    console.error(
+                        "Failed to get PDF page dimensions:",
+                        error
+                    );
+                }
             });
-        }).catch((error: unknown) => {
-            if (!cancelled) {
-                console.error("Failed to get PDF page dimensions:", error);
-            }
-        });
 
         return () => {
             cancelled = true;
@@ -180,10 +247,10 @@ export default function PdfDocument({
                         pageNumber={pageNumber}
                         scrollContainer={scrollContainer}
                         scale={scale}
+                        citationTarget={citationTarget}
                     />
                 ))}
             </div>
         </div>
-    )
-
+    );
 }

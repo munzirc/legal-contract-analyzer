@@ -60,7 +60,6 @@ export default function DocumentDropdown() {
   const isLoading = useDocumentStore(
     (state) => state.isLoadingDocuments
   );
-  const fetchError = useDocumentStore((state) => state.fetchError);
   const deleteDocumentById = useDocumentStore(
     (state) => state.deleteDocumentById
   );
@@ -68,6 +67,7 @@ export default function DocumentDropdown() {
   const activeDocumentId = useAppStore(
     (state) => state.activeDocumentId
   );
+  
   const setActiveDocument = useAppStore(
     (state) => state.setActiveDocument
   );
@@ -127,13 +127,8 @@ export default function DocumentDropdown() {
 
       {isOpen && (
         <div className="mt-1 max-h-48 space-y-2 overflow-y-auto pl-2 custom-scrollbar">
-          {fetchError && (
-            <p className="px-2 py-2 text-xs text-red-600">
-              {fetchError}
-            </p>
-          )}
-
-          {!isLoading && !fetchError && documents.length === 0 && (
+          
+          {!isLoading && documents.length === 0 && (
             <p className="px-2 py-3 text-xs text-slate-400">
               No documents uploaded yet.
             </p>

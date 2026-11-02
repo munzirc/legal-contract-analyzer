@@ -61,10 +61,9 @@ export const useDocumentStore = create<DocumentState>((set) => ({
     uploadNewDocument: async (file) => {
         set({ isUploading: true });
  
-        let response: any;
- 
+
         try {
-            response =await uploadDocument(file);
+            await uploadDocument(file);
 
             const documents = await getDocuments();
 

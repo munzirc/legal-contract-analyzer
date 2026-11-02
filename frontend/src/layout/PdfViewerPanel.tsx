@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import {
   LuFileText,
@@ -17,6 +16,10 @@ export default function PdfViewerPanel() {
 
   const activeDocumentId = useAppStore(
     (state) => state.activeDocumentId
+  );
+
+  const citationTarget = useAppStore(
+    (state) => state.citationTarget
   );
 
   const activeDocument = useDocumentStore((state) =>
@@ -43,7 +46,6 @@ export default function PdfViewerPanel() {
   useEffect(() => {
     setZoom(1);
   }, [activeDocumentId]);
-
 
   return (
     <section className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white">
@@ -149,10 +151,14 @@ export default function PdfViewerPanel() {
           <PdfDocument
             document={pdfDocument}
             zoom={zoom}
+            citationTarget={
+              citationTarget?.documentId === activeDocumentId
+                ? citationTarget
+                : null
+            }
           />
         )}
       </div>
     </section>
   );
-
 }

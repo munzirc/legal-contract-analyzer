@@ -90,14 +90,15 @@ def prepare_stream_context(
 
 
 
-
 def run_stream_worker(
     context: StreamContext,
     event_queue: EventQueue,
 ) -> None:
+    conversation_id = str(context.conversation_id)
+
     try:
         with SessionLocal() as worker_db:
-            
+
             conversation = worker_db.get(
                 Conversation,
                 context.conversation_id,
@@ -107,7 +108,7 @@ def run_stream_worker(
                 raise ConversationNotFoundError(
                     f"Conversation {context.conversation_id} not found."
                 )
-            
+
             user_message = ChatMessage(
                 conversation_id=conversation.id,
                 role=ChatRole.USER,
@@ -118,23 +119,44 @@ def run_stream_worker(
             worker_db.commit()
             worker_db.refresh(user_message)
 
-            event_queue.put(
-                (
-                    "progress",
-                    {"message": "Starting contract analysis"},
-                )
-            )
-            
-            
+            # 1. Emit the saved user message.
+            event_queue.put((
+                "user_message",
+                {
+                    "conversation_id": conversation_id,
+                    "message": {
+                        "id": str(user_message.id),
+                        "role": user_message.role.value,
+                        "content": user_message.content,
+                        "created_at": user_message.created_at.isoformat(),
+                        "evidence": [],
+                    },
+                },
+            ))
 
-            # 2. Run the agent.
+            # 2. Emit initial progress.
+            event_queue.put((
+                "progress",
+                {
+                    "conversation_id": conversation_id,
+                    "message": "Starting contract analysis",
+                },
+            ))
+
+            # 3. Run the agent.
             agent_result = start_agent(
                 question=context.question,
                 document_ids=context.document_ids,
                 selected_documents=context.selected_documents,
                 previous_interaction_id=context.previous_interaction_id,
                 progress_callback=lambda message: event_queue.put(
-                    ("progress", {"message": message})
+                    (
+                        "progress",
+                        {
+                            "conversation_id": conversation_id,
+                            "message": message,
+                        },
+                    )
                 ),
             )
 
@@ -142,17 +164,16 @@ def run_stream_worker(
                 not agent_result.completed
                 or agent_result.response is None
             ):
-                event_queue.put(
-                    (
-                        "error",
-                        {
-                            "message": (
-                                agent_result.error
-                                or "The agent could not complete the analysis."
-                            )
-                        },
-                    )
-                )
+                event_queue.put((
+                    "error",
+                    {
+                        "conversation_id": conversation_id,
+                        "message": (
+                            agent_result.error
+                            or "The agent could not complete the analysis."
+                        ),
+                    },
+                ))
                 return
 
             agent_response: AgentResponse = agent_result.response
@@ -171,7 +192,7 @@ def run_stream_worker(
             worker_db.commit()
             worker_db.refresh(assistant_message)
 
-            # Send the answer immediately. Evidence is processed afterward.
+            # 4. Emit the saved assistant answer.
             answer_response = ChatMessageResponse(
                 id=assistant_message.id,
                 role=assistant_message.role,
@@ -180,21 +201,15 @@ def run_stream_worker(
                 evidence=[],
             )
 
-            event_queue.put(
-                (
-                    "answer",
-                    {
-                        "conversation_id": str(
-                            conversation.id
-                        ),
-                        "message": answer_response.model_dump(
-                            mode="json"
-                        ),
-                    },
-                )
-            )
+            event_queue.put((
+                "answer",
+                {
+                    "conversation_id": conversation_id,
+                    "message": answer_response.model_dump(mode="json"),
+                },
+            ))
 
-            # 4. Load the selected documents using the worker session.
+            # 5. Load the selected documents.
             documents = worker_db.query(Document).filter(
                 Document.id.in_(context.document_ids)
             ).all()
@@ -203,7 +218,7 @@ def run_stream_worker(
                 document.id: document
                 for document in documents
             }
-            
+
             if len(documents_by_id) != len(set(context.document_ids)):
                 raise ConversationNotFoundError(
                     "One or more documents attached to this conversation are no longer available."
@@ -211,23 +226,19 @@ def run_stream_worker(
 
             total = len(agent_response.evidence)
 
-            # 5. Verify and process evidence one item at a time.
+            # 6. Verify and process evidence one item at a time.
             for index, evidence in enumerate(
                 agent_response.evidence,
                 start=1,
             ):
-                event_queue.put(
-                    (
-                        "progress",
-                        {
-                            "message": (
-                                f"Verifying evidence {index} of {total}"
-                            )
-                        },
-                    )
-                )
+                event_queue.put((
+                    "progress",
+                    {
+                        "conversation_id": conversation_id,
+                        "message": f"Verifying evidence {index} of {total}",
+                    },
+                ))
 
-                # Parse the agent-supplied document ID.
                 try:
                     evidence_document_id = UUID(
                         str(evidence.document_id)
@@ -235,7 +246,6 @@ def run_stream_worker(
                 except (ValueError, TypeError, AttributeError):
                     evidence_document_id = None
 
-                # Only selected documents are eligible for evidence.
                 document = (
                     documents_by_id.get(evidence_document_id)
                     if evidence_document_id is not None
@@ -245,7 +255,6 @@ def run_stream_worker(
                 if document is None:
                     continue
 
-                # Verify the quote and attempt PDF coordinate extraction.
                 verified = verify_agent_evidence_item(
                     db=worker_db,
                     evidence=evidence,
@@ -255,7 +264,6 @@ def run_stream_worker(
                 if verified is None:
                     continue
 
-                # Confirm the verifier's document ID is selected too.
                 verified_document = (
                     documents_by_id.get(verified.document_id)
                     if verified.document_id is not None
@@ -269,9 +277,7 @@ def run_stream_worker(
                 is_verified = verified.is_verified
                 coordinates = verified.coordinates
 
-                # 6. Persist verified or unverified evidence.
-                # Unverified quotes are saved only when associated
-                # with a selected document.
+                # 7. Persist evidence.
                 evidence_record = MessageEvidence(
                     message_id=assistant_message.id,
                     document_id=verified_document.id,
@@ -293,7 +299,7 @@ def run_stream_worker(
                 worker_db.commit()
                 worker_db.refresh(evidence_record)
 
-                # 7. Emit evidence after persistence succeeds.
+                # 8. Emit evidence after persistence succeeds.
                 evidence_data = {
                     "id": str(evidence_record.id),
                     "document_id": str(verified_document.id),
@@ -310,45 +316,44 @@ def run_stream_worker(
                         }
                         for coordinate in coordinates
                     ],
-                    "index": index,
-                    "total": total,
                 }
 
-                event_queue.put(("evidence", evidence_data))
-
-            # 8. All evidence items have been processed.
-            event_queue.put(
-                (
-                    "complete",
+                event_queue.put((
+                    "evidence",
                     {
-                        "conversation_id": str(
-                            conversation.id
-                        ),
-                        "user_message_id": str(user_message.id),
-                        "assistant_message_id": str(
-                            assistant_message.id
-                        ),
-                        "status": "completed",
+                        "conversation_id": conversation_id,
+                        "message_id": str(assistant_message.id),
+                        "evidence": evidence_data,
+                        "index": index,
+                        "total": total,
                     },
-                )
-            )
+                ))
+
+            # 9. All evidence items have been processed.
+            event_queue.put((
+                "complete",
+                {
+                    "conversation_id": conversation_id,
+                    "user_message_id": str(user_message.id),
+                    "assistant_message_id": str(assistant_message.id),
+                    "status": "completed",
+                },
+            ))
 
     except Exception:
         logger.exception("Chat streaming worker failed.")
 
-        event_queue.put(
-            (
-                "error",
-                {
-                    "message": (
-                        "An error occurred while processing your request."
-                    )
-                },
-            )
-        )
+        event_queue.put((
+            "error",
+            {
+                "conversation_id": conversation_id,
+                "message": "An error occurred while processing your request.",
+            },
+        ))
 
     finally:
         event_queue.put(None)
+
 
 
 

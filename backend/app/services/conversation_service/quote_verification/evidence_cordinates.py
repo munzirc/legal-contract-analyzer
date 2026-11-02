@@ -95,6 +95,9 @@ def find_evidence_coordinates(
                 
                 rectangles = page.search_for(page_quote)
                 
+                print(page.rect)
+                print(page.rotation)
+                
                 # Require a match for every non-empty page segment.
                 # Never return misleading partial coordinates.
                 if not rectangles:

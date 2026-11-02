@@ -1,5 +1,5 @@
-
 import { useEffect, useMemo, useState } from "react";
+
 import {
     Dialog,
     DialogContent,
@@ -8,20 +8,34 @@ import {
     DialogHeader,
     DialogTitle,
 } from "../../../components/ui/dialog";
+
 import { Checkbox } from "../../../components/ui/checkbox";
+
+import { useAppStore } from "../../../stores/useAppStore";
 import { useDocumentStore } from "../../../stores/useDocumentStore";
 import { useConversationStore } from "../../../stores/useConversationStore";
 
 interface ConversationDocumentsDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
+    draftDocumentIds: string[];
+    onDraftDocumentIdsChange: (ids: string[]) => void;
 }
 
 export default function ConversationDocumentsDialog({
     open,
     onOpenChange,
+    draftDocumentIds,
+    onDraftDocumentIdsChange,
 }: ConversationDocumentsDialogProps) {
+    const activeConversationId = useAppStore(
+        (state) => state.activeConversationId
+    );
+
+    const isNewChat = !activeConversationId;
+
     const documents = useDocumentStore((state) => state.documents);
+
     const isLoadingDocuments = useDocumentStore(
         (state) => state.isLoadingDocuments
     );
@@ -29,19 +43,25 @@ export default function ConversationDocumentsDialog({
     const conversationDocumentIds = useConversationStore(
         (state) => state.conversationDocumentIds
     );
+
     const isUpdatingDocuments = useConversationStore(
         (state) => state.isUpdatingDocuments
     );
+
     const addDocumentsToConversation = useConversationStore(
         (state) => state.addDocumentsToConversation
     );
+
     const removeDocumentFromConversation = useConversationStore(
         (state) => state.removeDocumentFromConversation
     );
 
     const [selectedDocumentIds, setSelectedDocumentIds] = useState<string[]>([]);
 
-    // Clear pending selections whenever the dialog opens.
+    const currentDocumentIds = isNewChat
+        ? draftDocumentIds
+        : conversationDocumentIds;
+
     useEffect(() => {
         if (open) {
             setSelectedDocumentIds([]);
@@ -50,13 +70,13 @@ export default function ConversationDocumentsDialog({
 
     const attachedDocuments = useMemo(
         () =>
-            conversationDocumentIds.map((documentId) => ({
+            currentDocumentIds.map((documentId) => ({
                 id: documentId,
                 document: documents.find(
                     (document) => document.id === documentId
                 ),
             })),
-        [conversationDocumentIds, documents]
+        [currentDocumentIds, documents]
     );
 
     const availableDocuments = useMemo(
@@ -64,12 +84,21 @@ export default function ConversationDocumentsDialog({
             documents.filter(
                 (document) =>
                     document.status === "READY" &&
-                    !conversationDocumentIds.includes(document.id)
+                    !currentDocumentIds.includes(document.id)
             ),
-        [documents, conversationDocumentIds]
+        [documents, currentDocumentIds]
     );
 
     const toggleDocumentSelection = (documentId: string) => {
+        if (isNewChat) {
+            const updatedIds = draftDocumentIds.includes(documentId)
+                ? draftDocumentIds.filter((id) => id !== documentId)
+                : [...draftDocumentIds, documentId];
+
+            onDraftDocumentIdsChange(updatedIds);
+            return;
+        }
+
         setSelectedDocumentIds((current) =>
             current.includes(documentId)
                 ? current.filter((id) => id !== documentId)
@@ -78,13 +107,16 @@ export default function ConversationDocumentsDialog({
     };
 
     const handleAddDocuments = async () => {
-        if (selectedDocumentIds.length === 0 || isUpdatingDocuments) {
+        if (
+            isNewChat ||
+            selectedDocumentIds.length === 0 ||
+            isUpdatingDocuments
+        ) {
             return;
         }
 
         await addDocumentsToConversation(selectedDocumentIds);
 
-        // The store updates this list only after a successful API request.
         const updatedIds = useConversationStore.getState()
             .conversationDocumentIds;
 
@@ -98,6 +130,13 @@ export default function ConversationDocumentsDialog({
     };
 
     const handleRemoveDocument = async (documentId: string) => {
+        if (isNewChat) {
+            onDraftDocumentIdsChange(
+                draftDocumentIds.filter((id) => id !== documentId)
+            );
+            return;
+        }
+
         if (isUpdatingDocuments) {
             return;
         }
@@ -110,27 +149,29 @@ export default function ConversationDocumentsDialog({
             <DialogContent className="max-h-[85vh] overflow-hidden sm:max-w-lg">
                 <DialogHeader>
                     <DialogTitle>Conversation documents</DialogTitle>
+
                     <DialogDescription>
-                        Manage the documents used as context for this conversation.
+                        {isNewChat
+                            ? "Select the documents you want to use in this new conversation."
+                            : "Manage the documents used as context for this conversation."}
                     </DialogDescription>
                 </DialogHeader>
 
                 <div className="flex min-h-0 flex-col gap-6 overflow-y-auto py-2">
-                    {/* Attached documents */}
                     <section className="space-y-3">
                         <div className="flex items-center justify-between">
                             <h3 className="text-sm font-semibold text-slate-900">
-                                Attached documents
+                                Selected documents
                             </h3>
 
                             <span className="rounded-full bg-brand-50 px-2.5 py-1 text-xs font-medium text-brand-700">
-                                {conversationDocumentIds.length} attached
+                                {currentDocumentIds.length} selected
                             </span>
                         </div>
 
                         {attachedDocuments.length === 0 ? (
                             <p className="rounded-lg border border-dashed border-slate-200 px-4 py-6 text-center text-sm text-slate-500">
-                                No documents attached to this conversation.
+                                No documents selected.
                             </p>
                         ) : (
                             <div className="divide-y divide-slate-100 rounded-lg border border-slate-200">
@@ -143,16 +184,11 @@ export default function ConversationDocumentsDialog({
                                             <p className="truncate text-sm font-medium text-slate-800">
                                                 {document?.filename ?? "Document unavailable"}
                                             </p>
-                                            {!document && (
-                                                <p className="text-xs text-slate-400">
-                                                    {id}
-                                                </p>
-                                            )}
                                         </div>
 
                                         <button
                                             type="button"
-                                            disabled={isUpdatingDocuments}
+                                            disabled={!isNewChat && isUpdatingDocuments}
                                             onClick={() => handleRemoveDocument(id)}
                                             className="shrink-0 rounded-md px-2 py-1 text-xs font-medium text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
                                         >
@@ -164,14 +200,14 @@ export default function ConversationDocumentsDialog({
                         )}
                     </section>
 
-                    {/* Available documents */}
                     <section className="space-y-3">
                         <div>
                             <h3 className="text-sm font-semibold text-slate-900">
-                                Add documents
+                                Available documents
                             </h3>
+
                             <p className="mt-1 text-xs text-slate-500">
-                                Select documents from your library. Only ready documents are shown.
+                                Only ready documents from your library are shown.
                             </p>
                         </div>
 
@@ -191,10 +227,12 @@ export default function ConversationDocumentsDialog({
                                         className="flex cursor-pointer items-center gap-3 px-3 py-3 transition hover:bg-slate-50"
                                     >
                                         <Checkbox
-                                            checked={selectedDocumentIds.includes(
-                                                document.id
-                                            )}
-                                            disabled={isUpdatingDocuments}
+                                            checked={
+                                                isNewChat
+                                                    ? false
+                                                    : selectedDocumentIds.includes(document.id)
+                                            }
+                                            disabled={!isNewChat && isUpdatingDocuments}
                                             onCheckedChange={() =>
                                                 toggleDocumentSelection(document.id)
                                             }
@@ -219,19 +257,21 @@ export default function ConversationDocumentsDialog({
                         Close
                     </button>
 
-                    <button
-                        type="button"
-                        disabled={
-                            selectedDocumentIds.length === 0 ||
-                            isUpdatingDocuments
-                        }
-                        onClick={handleAddDocuments}
-                        className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                        {isUpdatingDocuments
-                            ? "Updating..."
-                            : `Add selected (${selectedDocumentIds.length})`}
-                    </button>
+                    {!isNewChat && (
+                        <button
+                            type="button"
+                            disabled={
+                                selectedDocumentIds.length === 0 ||
+                                isUpdatingDocuments
+                            }
+                            onClick={handleAddDocuments}
+                            className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                            {isUpdatingDocuments
+                                ? "Updating..."
+                                : `Add selected (${selectedDocumentIds.length})`}
+                        </button>
+                    )}
                 </DialogFooter>
             </DialogContent>
         </Dialog>

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import {
     LuFileText,
@@ -6,20 +5,35 @@ import {
     LuSparkles,
 } from "react-icons/lu";
 
+import { useAppStore } from "../../../stores/useAppStore";
 import { useConversationStore } from "../../../stores/useConversationStore";
 import ConversationDocumentsDialog from "./ConversationDocumentsDialog";
 
-export default function ChatToolbar() {
+interface ChatToolbarProps {
+    draftDocumentIds: string[];
+    onDraftDocumentIdsChange: (ids: string[]) => void;
+    onNewChat: () => void;
+}
+
+export default function ChatToolbar({
+    draftDocumentIds,
+    onDraftDocumentIdsChange,
+    onNewChat,
+}: ChatToolbarProps) {
     const [isDocumentsDialogOpen, setIsDocumentsDialogOpen] =
         useState(false);
 
-    const startNewChat = useConversationStore(
-        (state) => state.startNewChat
+    const activeConversationId = useAppStore(
+        (state) => state.activeConversationId
     );
 
     const conversationDocumentIds = useConversationStore(
         (state) => state.conversationDocumentIds
     );
+
+    const documentCount = activeConversationId
+        ? conversationDocumentIds.length
+        : draftDocumentIds.length;
 
     return (
         <>
@@ -38,7 +52,7 @@ export default function ChatToolbar() {
                 <div className="flex items-center gap-2">
                     <button
                         type="button"
-                        onClick={startNewChat}
+                        onClick={onNewChat}
                         title="New chat"
                         className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium text-brand-700 transition hover:bg-brand-50"
                     >
@@ -56,7 +70,7 @@ export default function ChatToolbar() {
                         <span>Documents</span>
 
                         <span className="rounded-full bg-brand-100 px-1.5 py-0.5 text-[10px] font-semibold text-brand-700">
-                            {conversationDocumentIds.length}
+                            {documentCount}
                         </span>
                     </button>
                 </div>
@@ -65,6 +79,8 @@ export default function ChatToolbar() {
             <ConversationDocumentsDialog
                 open={isDocumentsDialogOpen}
                 onOpenChange={setIsDocumentsDialogOpen}
+                draftDocumentIds={draftDocumentIds}
+                onDraftDocumentIdsChange={onDraftDocumentIdsChange}
             />
         </>
     );

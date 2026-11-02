@@ -1,9 +1,7 @@
 
 import {
-    LuMessagesSquare,
     LuPanelLeftClose,
     LuPanelLeftOpen,
-    LuPlus,
     LuSettings,
 } from "react-icons/lu";
 
